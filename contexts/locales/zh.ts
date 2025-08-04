@@ -58,6 +58,7 @@ export const zh = {
     read: '朗读',
     copy: '复制',
     swapLanguages: '交换语言',
+    dropFilesHere: '拖拽到此处上传',
     // Modals
     editChat: '编辑对话',
     shareChat: '分享对话',

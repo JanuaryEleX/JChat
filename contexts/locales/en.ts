@@ -57,6 +57,7 @@ export const en = {
     read: 'Read',
     copy: 'Copy',
     swapLanguages: 'Swap languages',
+    dropFilesHere: 'Drop files here to upload',
     // Modals
     editChat: 'Edit Chat',
     shareChat: 'Share Chat',

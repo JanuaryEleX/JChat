@@ -35,6 +35,7 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
   const { addToast } = useToast();
   const [files, setFiles] = useState<FileWithId[]>([]);
   const [isToolsOpen, setIsToolsOpen] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,6 +82,55 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
 
   useImperativeHandle(ref, () => ({ addFiles }));
 
+  useEffect(() => {
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(true);
+    };
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+    };
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
+      if (e.dataTransfer?.files) {
+        addFiles(Array.from(e.dataTransfer.files));
+      }
+    };
+    const handlePaste = (e: ClipboardEvent) => {
+      if (e.clipboardData?.files) {
+        addFiles(Array.from(e.clipboardData.files));
+      }
+    };
+
+    const chatInputElement = textareaRef.current?.closest('.glass-pane');
+    if (chatInputElement) {
+      chatInputElement.addEventListener('dragenter', handleDragEnter);
+      chatInputElement.addEventListener('dragleave', handleDragLeave);
+      chatInputElement.addEventListener('dragover', handleDragOver);
+      chatInputElement.addEventListener('drop', handleDrop);
+      document.addEventListener('paste', handlePaste);
+    }
+
+    return () => {
+      if (chatInputElement) {
+        chatInputElement.removeEventListener('dragenter', handleDragEnter);
+        chatInputElement.removeEventListener('dragleave', handleDragLeave);
+        chatInputElement.removeEventListener('dragover', handleDragOver);
+        chatInputElement.removeEventListener('drop', handleDrop);
+        document.removeEventListener('paste', handlePaste);
+      }
+    };
+  }, [addFiles]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) addFiles(Array.from(e.target.files));
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -122,7 +172,12 @@ export const ChatInput = forwardRef<ChatInputRef, ChatInputProps>(({ onSendMessa
                 <p className="text-xs text-[var(--text-color-secondary)] px-3 -mt-1">{t('studyLearnDesc')}</p>
             </div>
         </div>
-        <div className="glass-pane rounded-[var(--radius-2xl)] flex flex-col transition-all duration-300 focus-within:border-[var(--accent-color)] focus-within:ring-2 ring-[var(--accent-color)]">
+        <div className={`glass-pane rounded-[var(--radius-2xl)] flex flex-col transition-all duration-300 focus-within:border-[var(--accent-color)] focus-within:ring-2 ring-[var(--accent-color)] relative`}>
+          {isDragging && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-[var(--radius-2xl)] border-2 border-dashed border-[var(--accent-color)]">
+              <p className="text-white font-bold">{t('dropFilesHere')}</p>
+            </div>
+          )}
           <FilePreview files={files} onRemoveFile={handleRemoveFile} />
           <ActiveToolIndicator toolConfig={toolConfig} isStudyMode={isStudyModeActive} t={t} />
           <div className="flex items-end p-2">
