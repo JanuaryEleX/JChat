@@ -47,10 +47,17 @@ const MessageRenderer = ({ index, style, data }: { index: number, style: React.C
     const rowRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        if (rowRef.current) {
-            setRowHeight(index, rowRef.current.clientHeight);
-        }
-    }, [rowRef, index, setRowHeight, message]); // Rerun when message content changes
+        const node = rowRef.current;
+        if (!node) return;
+
+        const resizeObserver = new ResizeObserver(() => {
+            setRowHeight(index, node.clientHeight);
+        });
+
+        resizeObserver.observe(node);
+
+        return () => resizeObserver.disconnect();
+    }, [index, setRowHeight]);
 
     return (
         <div style={style} ref={rowRef}>
