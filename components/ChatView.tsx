@@ -1,6 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { VariableSizeList as List } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 import { ChatSession, Message, Settings, Persona } from '../types';
 import { Icon } from './Icon';
 import { WelcomeView } from './WelcomeView';
@@ -41,43 +39,10 @@ interface ChatViewProps {
   onExportChat: () => void;
 }
 
-const MessageRenderer = ({ index, style, data }: { index: number, style: React.CSSProperties, data: any }) => {
-    const { messages, setRowHeight, ...rest } = data;
-    const message = messages[index];
-    const rowRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const node = rowRef.current;
-        if (!node) return;
-
-        const resizeObserver = new ResizeObserver(() => {
-            setRowHeight(index, node.clientHeight);
-        });
-
-        resizeObserver.observe(node);
-
-        return () => resizeObserver.disconnect();
-    }, [index, setRowHeight]);
-
-    return (
-        <div style={style} ref={rowRef}>
-            <MessageBubble
-                key={message.id}
-                message={message}
-                index={index}
-                isLastMessageLoading={rest.isLoading && index === messages.length - 1}
-                {...rest}
-            />
-        </div>
-    );
-};
-
-
 export const ChatView: React.FC<ChatViewProps> = (props) => {
   const { chatSession, personas, onSendMessage, isLoading, settings, onNewChat } = props;
   const { t } = useLocalization();
-  const listRef = useRef<List>(null);
-  const rowHeights = useRef<{ [key: number]: number }>({});
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<ChatInputRef>(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const dragCounter = useRef(0);
@@ -96,28 +61,14 @@ export const ChatView: React.FC<ChatViewProps> = (props) => {
         setToolConfig(getDefaultToolConfig());
         setEditingMessageId(null);
         setChatInput('');
-        rowHeights.current = {}; // Reset heights for new chat
     }
     prevChatIdRef.current = chatSession?.id;
   }, [chatSession, getDefaultToolConfig]);
 
   useEffect(() => {
     if (isLoading || editingMessageId || !chatSession) return;
-    if (chatSession.messages.length > 0) {
-        listRef.current?.scrollToItem(chatSession.messages.length - 1, 'end');
-    }
-  }, [chatSession, chatSession?.messages.length, isLoading, editingMessageId]);
-
-  const getRowHeight = (index: number) => {
-    return rowHeights.current[index] || 150; // Default height
-  };
-
-  const setRowHeight = useCallback((index: number, size: number) => {
-    if (rowHeights.current[index] !== size && size > 0) {
-      rowHeights.current[index] = size;
-      listRef.current?.resetAfterIndex(0);
-    }
-  }, []);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatSession, chatSession?.messages, isLoading, editingMessageId]);
 
   const handleSendMessageWithTools = (message: string, files: File[]) => { onSendMessage(message, files, toolConfig); setChatInput(''); };
   const handleSendSuggestion = (suggestion: string) => onSendMessage(suggestion, [], { ...getDefaultToolConfig(), googleSearch: settings.defaultSearch });
@@ -159,8 +110,6 @@ export const ChatView: React.FC<ChatViewProps> = (props) => {
     }
   };
 
-  const messages = chatSession?.messages || [];
-
   return (
     <main
       className="glass-pane rounded-[var(--radius-2xl)] flex flex-col h-full overflow-hidden relative"
@@ -188,35 +137,10 @@ export const ChatView: React.FC<ChatViewProps> = (props) => {
         <div className="flex-grow flex flex-col relative min-h-0">
             <InternalView active={!!chatSession}>
               <div id="chat-content-area" className="flex-grow overflow-y-auto p-4 bg-[var(--bg-image)]">
-                  <AutoSizer>
-                      {({ height, width }) => (
-                          <List
-                              ref={listRef}
-                              height={height}
-                              width={width}
-                              itemCount={messages.length}
-                              itemSize={getRowHeight}
-                              itemData={{
-                                  messages: messages,
-                                  setRowHeight: setRowHeight,
-                                  onImageClick: props.onImageClick,
-                                  settings: settings,
-                                  persona: activePersona,
-                                  isEditing: editingMessageId,
-                                  onEditRequest: (id: string) => setEditingMessageId(id),
-                                  onCancelEdit: () => setEditingMessageId(null),
-                                  onSaveEdit: handleSaveEdit,
-                                  onDelete: props.onDeleteMessage,
-                                  onRegenerate: props.onRegenerate,
-                                  onCopy: (c: string) => navigator.clipboard.writeText(c),
-                                  onShowCitations: props.onShowCitations,
-                                  isLoading: isLoading,
-                              }}
-                          >
-                              {MessageRenderer}
-                          </List>
-                      )}
-                  </AutoSizer>
+                  {(chatSession?.messages || []).map((msg, index) => (
+                    <MessageBubble key={msg.id} message={msg} index={index} onImageClick={props.onImageClick} settings={settings} persona={activePersona} isLastMessageLoading={isLoading && index === chatSession!.messages.length - 1} isEditing={editingMessageId === msg.id} onEditRequest={() => setEditingMessageId(msg.id)} onCancelEdit={() => setEditingMessageId(null)} onSaveEdit={handleSaveEdit} onDelete={props.onDeleteMessage} onRegenerate={props.onRegenerate} onCopy={(c) => navigator.clipboard.writeText(c)} onShowCitations={props.onShowCitations} />
+                  ))}
+                  <div ref={messagesEndRef} />
               </div>
             </InternalView>
 
