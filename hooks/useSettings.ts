@@ -6,7 +6,7 @@ import { loadSettings, saveSettings } from '../services/storageService';
 
 const defaultSettings: Settings = {
   theme: 'light',
-  language: 'en',
+  language: 'zh',
   apiKey: [],
   showSuggestions: false,
   defaultModel: 'gemini-2.5-pro', // 默认模型可以根据需要调整
@@ -37,6 +37,9 @@ export const useSettings = () => {
   useEffect(() => {
     const loadedSettings = loadSettings();
     const initialSettings = { ...defaultSettings, ...loadedSettings };
+    if (initialSettings.language !== 'zh') {
+      initialSettings.language = 'zh';
+    }
     if (!loadedSettings && window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
       initialSettings.theme = 'dark';
     }
