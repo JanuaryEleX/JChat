@@ -40,14 +40,14 @@ export function sendMessageStream(apiKeys: string[], messages: Message[], newMes
   }, baseUrlForRequest);
 }
 
-export async function generateChatDetails(apiKeys: string[], prompt: string, model: string, settings: Settings): Promise<{ title: string; icon: string }> {
+export async function generateChatDetails(apiKeys: string[], prompt: string, model: string, settings: Settings): Promise<{ title: string }> {
   try {
     const payload = {
       model: model,
-      contents: `Generate a short, concise title (max 5 words) and a single, relevant emoji for a conversation starting with this user prompt: "${prompt}". The title must be in Chinese.`,
-      config: { 
+      contents: `Generate a short, concise title (max 5 words) for a conversation starting with this user prompt: "${prompt}". The title must be in Chinese.`,
+      config: {
         responseMimeType: "application/json",
-        responseSchema: { type: Type.OBJECT, properties: { title: { type: Type.STRING }, icon: { type: Type.STRING } } }
+        responseSchema: { type: Type.OBJECT, properties: { title: { type: Type.STRING } } }
       },
     };
     
@@ -68,12 +68,12 @@ export async function generateChatDetails(apiKeys: string[], prompt: string, mod
     const jsonText = response.text.trim();
     if (jsonText) {
       const result = JSON.parse(jsonText);
-      return { title: result.title, icon: result.icon };
+      return { title: result.title };
     }
-    return { title: prompt.substring(0, 40) || 'New Chat', icon: '💬' };
+    return { title: prompt.substring(0, 40) || 'New Chat' };
   } catch (error) {
     console.error("Error generating chat details:", error);
-    return { title: prompt.substring(0, 40) || 'New Chat', icon: '💬' };
+    return { title: prompt.substring(0, 40) || 'New Chat' };
   }
 }
 

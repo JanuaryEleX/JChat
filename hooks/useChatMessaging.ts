@@ -133,8 +133,8 @@ export const useChatMessaging = ({ settings, activeChat, personas, setChats, set
       setActiveChatId(newChat.id);
       setIsNextChatStudyMode(false);
       if (settings.autoTitleGeneration && content) {
-        if(apiKeys.length > 0) generateChatDetails(apiKeys, content, settings.titleGenerationModel, settings).then(({ title, icon }) => {
-          setChats(p => p.map(c => c.id === currentChatId ? { ...c, title, icon } : c))
+        if(apiKeys.length > 0) generateChatDetails(apiKeys, content, settings.titleGenerationModel, settings).then(({ title }) => {
+          setChats(p => p.map(c => c.id === currentChatId ? { ...c, title, icon: '💬' } : c))
         });
       }
     } else {

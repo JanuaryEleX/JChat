@@ -13,9 +13,10 @@ interface ChatHeaderProps {
     isSidebarCollapsed: boolean;
     onToggleSidebar: () => void;
     onToggleMobileSidebar: () => void;
+    onExportChat: () => void;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({ chatSession, onNewChat, availableModels, onSetModelForActiveChat, currentModel, isSidebarCollapsed, onToggleSidebar, onToggleMobileSidebar }) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = ({ chatSession, onNewChat, availableModels, onSetModelForActiveChat, currentModel, isSidebarCollapsed, onToggleSidebar, onToggleMobileSidebar, onExportChat }) => {
     const { t } = useLocalization();
 
     return (
@@ -53,8 +54,11 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({ chatSession, onNewChat, 
                     <div className="w-64 flex-shrink-0 hidden md:block">
                         <ModelSelector models={availableModels} selectedModel={chatSession.model || currentModel} onModelChange={onSetModelForActiveChat} isHeader={true} />
                     </div>
-                    <div className="md:hidden flex items-center gap-1 ml-auto">
-                        <button onClick={onNewChat} className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" data-tooltip={t('newChat')} data-tooltip-placement="left">
+                    <div className="flex items-center gap-1 ml-auto">
+                        <button onClick={onExportChat} className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10" data-tooltip="Export Chat" data-tooltip-placement="left">
+                            <Icon icon="download" className="w-5 h-5" />
+                        </button>
+                        <button onClick={onNewChat} className="p-2 rounded-full hover:bg-black/10 dark:hover:bg-white/10 md:hidden" data-tooltip={t('newChat')} data-tooltip-placement="left">
                             <Icon icon="plus" className="w-6 h-6" />
                         </button>
                     </div>
