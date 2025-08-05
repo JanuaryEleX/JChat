@@ -113,9 +113,9 @@ export const ChatView: React.FC<ChatViewProps> = (props) => {
   };
 
   const setRowHeight = useCallback((index: number, size: number) => {
-    if (rowHeights.current[index] !== size) {
-        listRef.current?.resetAfterIndex(index);
-        rowHeights.current = { ...rowHeights.current, [index]: size };
+    if (rowHeights.current[index] !== size && size > 0) {
+      rowHeights.current[index] = size;
+      listRef.current?.resetAfterIndex(0);
     }
   }, []);
 
