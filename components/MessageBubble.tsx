@@ -78,7 +78,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = (props) => {
                       </div>
                   </div>
               )}
-              <div className={`p-4 ${isPulsing ? 'animate-pulse' : ''} ${isUser ? '' : 'text-[var(--text-color)]'}`}>
+              <div className={`p-4 ${isUser ? '' : 'text-[var(--text-color)]'}`}>
                   {message.attachments && message.attachments.length > 0 && (
                     <div className="mb-2 flex flex-wrap gap-2">
                       {message.attachments.map((att, i) => (
@@ -98,7 +98,13 @@ export const MessageBubble: React.FC<MessageBubbleProps> = (props) => {
                     </div>
                   )}
                   {hasContent && (isRawView ? <pre className="raw-text-view"><code>{message.content}</code></pre> : <MarkdownRenderer content={message.content} theme={settings.theme} />)}
-                  {isPulsing && <div className="whitespace-pre-wrap">{message.content}</div>}
+                  {isPulsing && (
+                    <div className="bouncing-dots">
+                      <span className="dot-1"></span>
+                      <span className="dot-2"></span>
+                      <span className="dot-3"></span>
+                    </div>
+                  )}
               </div>
               {hasCitations && (
                   <div className="border-t border-[var(--glass-border)] mt-2 mx-2 mb-2 pt-2">

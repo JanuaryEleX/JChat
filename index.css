@@ -1714,3 +1714,40 @@ body:not(.dark-mode) .hljs-link { text-decoration: underline; }
   border-width: 0;
   pointer-events: none;
 }
+
+/* Bouncing dots animation for thinking indicator */
+@keyframes bouncing-dot {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}
+
+.bouncing-dots {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  height: 1.5rem; /* Match line-height of text */
+}
+
+.bouncing-dots span {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: currentColor;
+  border-radius: 50%;
+  animation: bouncing-dot 1.4s infinite ease-in-out both;
+}
+
+.bouncing-dots .dot-1 {
+  animation-delay: -0.32s;
+}
+
+.bouncing-dots .dot-2 {
+  animation-delay: -0.16s;
+}
+
+.bouncing-dots .dot-3 {
+  animation-delay: 0s;
+}
