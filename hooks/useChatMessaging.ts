@@ -5,6 +5,8 @@ import { fileToData } from '../utils/fileUtils';
 
 interface UseChatMessagingProps {
   settings: Settings;
+  apiKey: string;
+  baseUrl: string;
   activeChat: ChatSession | null;
   personas: Persona[];
   setChats: React.Dispatch<React.SetStateAction<ChatSession[]>>;
@@ -15,7 +17,7 @@ interface UseChatMessagingProps {
   setIsNextChatStudyMode: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const useChatMessaging = ({ settings, activeChat, personas, setChats, setSuggestedReplies, setActiveChatId, addToast, isNextChatStudyMode, setIsNextChatStudyMode }: UseChatMessagingProps) => {
+export const useChatMessaging = ({ settings, apiKey, baseUrl, activeChat, personas, setChats, setSuggestedReplies, setActiveChatId, addToast, isNextChatStudyMode, setIsNextChatStudyMode }: UseChatMessagingProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const isCancelledRef = useRef(false);
 
@@ -25,12 +27,8 @@ export const useChatMessaging = ({ settings, activeChat, personas, setChats, set
   }, []);
 
   const _initiateStream = useCallback(async (chatId: string, historyForAPI: Message[], toolConfig: any, personaId: string | null | undefined, isStudyMode?: boolean) => {
-    const apiKeys = settings.apiKey && settings.apiKey.length > 0
-      ? settings.apiKey
-      : (process.env.API_KEY ? [process.env.API_KEY] : []);
-    
-    if (apiKeys.length === 0) {
-        addToast("Please set your Gemini API key in Settings.", 'error');
+    if (!apiKey) {
+        addToast("API key is not available.", 'error');
         setIsLoading(false);
         return;
     }
@@ -60,7 +58,7 @@ export const useChatMessaging = ({ settings, activeChat, personas, setChats, set
     try {
       const currentModel = chatSession.model;
       const effectiveToolConfig = { ...toolConfig, showThoughts: settings.showThoughts };
-      const stream = sendMessageStream(apiKeys, historyForAPI.slice(0, -1), promptContent, promptAttachments, currentModel, settings, effectiveToolConfig, activePersona, chatSession.isStudyMode);
+      const stream = sendMessageStream(apiKey, baseUrl, historyForAPI.slice(0, -1), promptContent, promptAttachments, currentModel, settings, effectiveToolConfig, activePersona, chatSession.isStudyMode);
       
       for await (const chunk of stream) {
         if(isCancelledRef.current) break;
@@ -103,7 +101,7 @@ export const useChatMessaging = ({ settings, activeChat, personas, setChats, set
       if (!isCancelledRef.current) {
         setIsLoading(false);
         if (settings.showSuggestions && fullResponse && !streamHadError) {
-          generateSuggestedReplies(apiKeys, [...historyForAPI, { ...modelMessage, content: fullResponse }], settings.suggestionModel, settings).then(setSuggestedReplies);
+          generateSuggestedReplies(apiKey, baseUrl, [...historyForAPI, { ...modelMessage, content: fullResponse }], settings.suggestionModel, settings).then(setSuggestedReplies);
         }
       }
     }
@@ -119,10 +117,6 @@ export const useChatMessaging = ({ settings, activeChat, personas, setChats, set
     let currentPersonaId = activeChat?.personaId;
     let currentIsStudyMode = activeChat?.isStudyMode;
 
-    const apiKeys = settings.apiKey && settings.apiKey.length > 0
-      ? settings.apiKey
-      : (process.env.API_KEY ? [process.env.API_KEY] : []);
-
     if (!currentChatId) {
       currentPersonaId = null;
       currentIsStudyMode = isNextChatStudyMode;
@@ -133,7 +127,7 @@ export const useChatMessaging = ({ settings, activeChat, personas, setChats, set
       setActiveChatId(newChat.id);
       setIsNextChatStudyMode(false);
       if (settings.autoTitleGeneration && content) {
-        if(apiKeys.length > 0) generateChatDetails(apiKeys, content, settings.titleGenerationModel, settings).then(({ title }) => {
+        if(apiKey) generateChatDetails(apiKey, baseUrl, content, 'gemini-2.5-flash-lite', settings).then(({ title }) => {
           setChats(p => p.map(c => c.id === currentChatId ? { ...c, title, icon: '💬' } : c))
         });
       }

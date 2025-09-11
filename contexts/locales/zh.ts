@@ -130,4 +130,5 @@ export const zh = {
     customApiBaseUrl: '自定义 API 基础 URL',
     customApiBaseUrlDesc: '输入您的自定义 API 基础 URL。',
     customApiBaseUrlPlaceholder: '输入您的 API 基础 URL',
+    switchAccount: '切换账户',
 };

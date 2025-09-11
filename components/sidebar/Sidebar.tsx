@@ -27,10 +27,11 @@ interface SidebarProps {
   onOpenPersonas: () => void;
   onOpenArchive: () => void;
   onOpenTranslate: () => void;
+  apiName: string;
 }
 
 export const Sidebar: React.FC<SidebarProps> = (props) => {
-  const { chats, folders, activeChatId, onSelectChat, onNewChat, onDeleteChat, onEditChat, onArchiveChat, isCollapsed, onToggleCollapse, isMobileSidebarOpen, onToggleMobileSidebar, searchQuery, onSetSearchQuery, onNewFolder, onEditFolder, onDeleteFolder, onMoveChatToFolder, onOpenSettings, onOpenPersonas, onOpenArchive, onOpenTranslate } = props;
+  const { chats, folders, activeChatId, onSelectChat, onNewChat, onDeleteChat, onEditChat, onArchiveChat, isCollapsed, onToggleCollapse, isMobileSidebarOpen, onToggleMobileSidebar, searchQuery, onSetSearchQuery, onNewFolder, onEditFolder, onDeleteFolder, onMoveChatToFolder, onOpenSettings, onOpenPersonas, onOpenArchive, onOpenTranslate, apiName } = props;
   const { t } = useLocalization();
   
   const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
@@ -180,6 +181,12 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
             <button onClick={onOpenSettings} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-2xl)] text-[var(--text-color)] hover:bg-black/10 dark:hover:bg-white/10" data-tooltip={t('settings')} data-tooltip-placement="right">
                 <Icon icon="settings" className="w-5 h-5" />
                 <span className="font-semibold">{t('settings')}</span>
+            </button>
+            <button onClick={() => {
+                localStorage.removeItem('kchat-password-verified');
+                window.location.reload();
+            }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-2xl)] text-[var(--text-color)] hover:bg-black/10 dark:hover:bg-white/10" data-tooltip={t('switchAccount')} data-tooltip-placement="right">
+                <span className="font-semibold">{apiName || t('switchAccount')}</span>
             </button>
         </div>
       </div>

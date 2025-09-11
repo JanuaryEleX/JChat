@@ -13,12 +13,14 @@ import { TranslationBox } from './TranslationBox';
 
 interface TranslateViewProps {
   settings: Settings;
+  apiKey: string;
+  baseUrl: string;
   onClose: () => void;
   history: TranslationHistoryItem[];
   setHistory: React.Dispatch<React.SetStateAction<TranslationHistoryItem[]>>;
 }
 
-const TranslateView: React.FC<TranslateViewProps> = ({ settings, onClose, history, setHistory }) => {
+const TranslateView: React.FC<TranslateViewProps> = ({ settings, apiKey, baseUrl, onClose, history, setHistory }) => {
   const { t } = useLocalization();
   const { addToast } = useToast();
   const [sourceText, setSourceText] = useState('');
@@ -48,11 +50,10 @@ const TranslateView: React.FC<TranslateViewProps> = ({ settings, onClose, histor
     setTranslatedText('');
 
     try {
-        const apiKeys = settings.apiKey?.length ? settings.apiKey : (process.env.API_KEY ? [process.env.API_KEY] : []);
-        if (apiKeys.length === 0) throw new Error("API key not configured in Settings.");
+        if (!apiKey) throw new Error("API key not configured.");
         
-        let finalSourceLang = sourceLang === 'auto' ? await detectLanguage(apiKeys, settings.languageDetectionModel, sourceText, settings) : sourceLang;
-        const result = await translateText(apiKeys, settings.defaultModel, sourceText, finalSourceLang, targetLang, mode, settings);
+        let finalSourceLang = sourceLang === 'auto' ? await detectLanguage(apiKey, baseUrl, settings.languageDetectionModel, sourceText, settings) : sourceLang;
+        const result = await translateText(apiKey, baseUrl, settings.defaultModel, sourceText, finalSourceLang, targetLang, mode, settings);
         setTranslatedText(result);
         
         const newHistoryItem: TranslationHistoryItem = { id: crypto.randomUUID(), sourceLang, targetLang, sourceText, translatedText: result, timestamp: Date.now(), mode };
@@ -98,9 +99,8 @@ const TranslateView: React.FC<TranslateViewProps> = ({ settings, onClose, histor
   const handleRead = async (text: string, langCode: string) => {
     if (!text.trim()) return;
     try {
-        const apiKeys = settings.apiKey || [];
-        if (apiKeys.length === 0 && !process.env.API_KEY) throw new Error("API key not set.");
-        const langToRead = langCode === 'auto' ? await detectLanguage(apiKeys, settings.languageDetectionModel, text, settings) : langCode;
+        if (!apiKey) throw new Error("API key not set.");
+        const langToRead = langCode === 'auto' ? await detectLanguage(apiKey, baseUrl, settings.languageDetectionModel, text, settings) : langCode;
         await readAloud(text, langToRead);
     } catch(e) {
         addToast(`Could not read aloud: ${(e as Error).message}.`, 'error');

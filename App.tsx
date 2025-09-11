@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import PasswordGate from './components/PasswordGate';
 import { Sidebar } from './components/sidebar/Sidebar';
 import { ChatView } from './components/ChatView';
 import { EditChatModal } from './components/EditChatModal';
@@ -26,7 +27,13 @@ import { ViewContainer } from './components/common/ViewContainer';
 
 type View = 'chat' | 'personas' | 'editor' | 'archive' | 'translate';
 
-const AppContainer = () => {
+interface AppContainerProps {
+  apiKey: string;
+  baseUrl: string;
+  apiName: string;
+}
+
+const AppContainer: React.FC<AppContainerProps> = ({ apiKey, baseUrl, apiName }) => {
   const { settings, setSettings, availableModels, isStorageLoaded } = useSettings();
   const { chats, setChats, folders, setFolders, activeChatId, setActiveChatId, ...chatDataHandlers } = useChatData({ settings, isStorageLoaded });
   const { personas, setPersonas, savePersonas } = usePersonas({ isStorageLoaded });
@@ -44,7 +51,7 @@ const AppContainer = () => {
     isLoading, handleSendMessage, handleCancel, handleDeleteMessage, 
     handleUpdateMessageContent, handleRegenerate, handleEditAndResubmit 
   } = useChatMessaging({ 
-    settings, activeChat, personas, setChats, 
+    settings, apiKey, baseUrl, activeChat, personas, setChats,
     setSuggestedReplies: chatDataHandlers.setSuggestedReplies, setActiveChatId, addToast,
     isNextChatStudyMode, setIsNextChatStudyMode
   });
@@ -132,7 +139,7 @@ const AppContainer = () => {
     <div className="h-dvh-screen w-screen flex bg-[var(--bg-image)] text-[var(--text-color)] overflow-hidden">
         <ToastContainer />
         {isMobileSidebarOpen && <div className="fixed inset-0 bg-black/30 z-30 md:hidden" onClick={() => setIsMobileSidebarOpen(false)} aria-hidden="true"/>}
-        <Sidebar chats={chats} folders={folders} activeChatId={activeChatId} onNewChat={() => handleNewChat(null)} onSelectChat={handleSelectChat} onDeleteChat={chatDataHandlers.handleDeleteChat} onEditChat={setEditingChat} onArchiveChat={(id) => chatDataHandlers.handleArchiveChat(id, true)} onNewFolder={() => setEditingFolder('new')} onEditFolder={setEditingFolder} onDeleteFolder={chatDataHandlers.handleDeleteFolder} onMoveChatToFolder={chatDataHandlers.handleMoveChatToFolder} isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(p => !p)} isMobileSidebarOpen={isMobileSidebarOpen} onToggleMobileSidebar={() => setIsMobileSidebarOpen(false)} searchQuery={searchQuery} onSetSearchQuery={setSearchQuery} onOpenSettings={() => setIsSettingsOpen(true)} onOpenPersonas={() => handleOpenView('personas')} onOpenArchive={() => handleOpenView('archive')} onOpenTranslate={() => handleOpenView('translate')} />
+        <Sidebar chats={chats} folders={folders} activeChatId={activeChatId} onNewChat={() => handleNewChat(null)} onSelectChat={handleSelectChat} onDeleteChat={chatDataHandlers.handleDeleteChat} onEditChat={setEditingChat} onArchiveChat={(id) => chatDataHandlers.handleArchiveChat(id, true)} onNewFolder={() => setEditingFolder('new')} onEditFolder={setEditingFolder} onDeleteFolder={chatDataHandlers.handleDeleteFolder} onMoveChatToFolder={chatDataHandlers.handleMoveChatToFolder} isCollapsed={isSidebarCollapsed} onToggleCollapse={() => setIsSidebarCollapsed(p => !p)} isMobileSidebarOpen={isMobileSidebarOpen} onToggleMobileSidebar={() => setIsMobileSidebarOpen(false)} searchQuery={searchQuery} onSetSearchQuery={setSearchQuery} onOpenSettings={() => setIsSettingsOpen(true)} onOpenPersonas={() => handleOpenView('personas')} onOpenArchive={() => handleOpenView('archive')} onOpenTranslate={() => handleOpenView('translate')} apiName={apiName} />
         <div className={`flex-1 flex flex-col h-full transition-all duration-300 ${isSidebarCollapsed ? 'p-3 pb-2' : 'p-3 pb-2 md:pl-0'}`}>
           <div className="view-wrapper">
               <ViewContainer view="chat" activeView={currentView}>
@@ -148,7 +155,7 @@ const AppContainer = () => {
                 <PersonaEditor personaToEdit={editingPersona} settings={settings} onSave={handleSavePersona} onClose={() => setCurrentView('personas')} />
               </ViewContainer>
                <ViewContainer view="translate" activeView={currentView}>
-                <TranslateView settings={settings} onClose={() => setCurrentView('chat')} history={translationHistory} setHistory={setTranslationHistory} />
+                <TranslateView settings={settings} apiKey={apiKey} baseUrl={baseUrl} onClose={() => setCurrentView('chat')} history={translationHistory} setHistory={setTranslationHistory} />
               </ViewContainer>
           </div>
         </div>
@@ -164,6 +171,29 @@ const AppContainer = () => {
 };
 
 export default function App() {
+  const [verified, setVerified] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [apiName, setApiName] = useState('');
+
+  useEffect(() => {
+    const isVerified = localStorage.getItem('kchat-password-verified');
+    if (isVerified) {
+      // 默认使用第一个密码对应的配置
+      const apiKey1 = import.meta.env.VITE_API_KEY_1;
+      const baseUrl1 = import.meta.env.VITE_API_BASE_URL_1;
+      const apiName1 = import.meta.env.VITE_API_NAME_1;
+      handlePasswordVerified(apiKey1, baseUrl1, apiName1);
+    }
+  }, []);
+
+  const handlePasswordVerified = (key: string, url: string, name: string) => {
+    setApiKey(key);
+    setBaseUrl(url);
+    setApiName(name);
+    setVerified(true);
+  };
+
   const getInitialLanguage = (): 'en' | 'zh' => {
      try {
       const savedSettings = localStorage.getItem('kchat-settings');
@@ -175,9 +205,16 @@ export default function App() {
     return 'en';
   }
 
+  if (!verified) {
+    return <PasswordGate onPasswordVerified={(key, url) => {
+      const name = key === import.meta.env.VITE_API_KEY_1 ? import.meta.env.VITE_API_NAME_1 : import.meta.env.VITE_API_NAME_2;
+      handlePasswordVerified(key, url, name);
+    }} />;
+  }
+
   return (
     <LocalizationProvider initialLanguage={getInitialLanguage()}>
-      <AppContainer />
+      <AppContainer apiKey={apiKey} baseUrl={baseUrl} apiName={apiName} />
     </LocalizationProvider>
   );
 }

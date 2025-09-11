@@ -129,4 +129,5 @@ export const en = {
     customApiBaseUrl: 'Custom API Base URL',
     customApiBaseUrlDesc: 'Enter your custom API base URL.',
     customApiBaseUrlPlaceholder: 'Enter your API base URL',
+    switchAccount: 'Switch Account',
 };

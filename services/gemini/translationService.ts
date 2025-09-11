@@ -2,7 +2,7 @@ import { GenerateContentResponse } from "@google/genai";
 import { Settings } from "../../types";
 import { executeWithKeyRotation } from './apiExecutor';
 
-export async function detectLanguage(apiKeys: string[], model: string, text: string, settings: Settings): Promise<string> {
+export async function detectLanguage(apiKey: string, baseUrl: string, model: string, text: string, settings: Settings): Promise<string> {
   if (!text.trim()) return 'en'; // Default to English for empty string
   try {
     const payload = {
@@ -15,9 +15,9 @@ export async function detectLanguage(apiKeys: string[], model: string, text: str
     console.log('Payload:', payload);
     console.log('----------------------');
 
-    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKeys, (ai) =>
+    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKey, (ai) =>
       ai.models.generateContent(payload),
-      settings.apiBaseUrl
+      baseUrl
     );
     const langCode = response.text.trim().toLowerCase();
     return (langCode.length === 2 || langCode.length === 3) ? langCode : 'en';
@@ -27,7 +27,7 @@ export async function detectLanguage(apiKeys: string[], model: string, text: str
   }
 }
 
-export async function translateText(apiKeys: string[], model: string, text: string, sourceLang: string, targetLang: string, mode: 'natural' | 'literal', settings: Settings): Promise<string> {
+export async function translateText(apiKey: string, baseUrl: string, model: string, text: string, sourceLang: string, targetLang: string, mode: 'natural' | 'literal', settings: Settings): Promise<string> {
   const naturalPrompt = `Your task is to translate the following text from ${sourceLang} to ${targetLang}.
 Your translation should be colloquial and evocative, capturing the essence of a native speaker’s speech. Avoid a mechanical, literal translation. Instead, employ idiomatic expressions and natural phrasing that resonate with a native speaker of ${targetLang}.
 IMPORTANT: Your response MUST contain *only* the translated text. Do not include the original text, detected language, target language name, or any other explanatory text, preambles, or apologies.
@@ -54,9 +54,9 @@ ${text}
     console.log('Payload:', payload);
     console.log('----------------------');
 
-    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKeys, (ai) =>
+    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKey, (ai) =>
       ai.models.generateContent(payload),
-      settings.apiBaseUrl
+      baseUrl
     );
     return response.text.trim();
   } catch (error) {

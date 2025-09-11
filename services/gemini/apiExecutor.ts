@@ -6,13 +6,12 @@ import { KeyManager } from '../keyManager';
  * proxying requests to a custom endpoint if provided.
  */
 export async function executeWithKeyRotation<T>(
-    apiKeys: string[],
+    apiKey: string,
     operation: (ai: GoogleGenAI) => Promise<T>,
     apiEndpoint?: string,
 ): Promise<T> {
-    const keyManager = new KeyManager(apiKeys);
-    if (keyManager.getTotalKeys() === 0) {
-        throw new Error("No API keys provided.");
+    if (!apiKey) {
+        throw new Error("No API key provided.");
     }
 
     const originalFetch = window.fetch;
@@ -43,24 +42,14 @@ export async function executeWithKeyRotation<T>(
     }
     
     try {
-        for (let i = 0; i < keyManager.getTotalKeys(); i++) {
-            const { key } = keyManager.getNextKey();
-            if (!key) continue;
-
-            try {
-                const ai = new GoogleGenAI({ apiKey: key });
-                const result = await operation(ai);
-                keyManager.saveSuccessIndex();
-                return result;
-            } catch (error) {
-                console.warn(`API call failed with key ending in ...${key.slice(-4)}. Trying next key. Error:`, error);
-                if (i === keyManager.getTotalKeys() - 1) {
-                    console.error("All API keys failed.");
-                    throw error;
-                }
-            }
+        try {
+            const ai = new GoogleGenAI({ apiKey });
+            const result = await operation(ai);
+            return result;
+        } catch (error) {
+            console.error("API call failed.", error);
+            throw error;
         }
-        throw new Error("All API keys failed.");
     } finally {
         if (proxyActive) {
             window.fetch = originalFetch;
@@ -74,13 +63,12 @@ export async function executeWithKeyRotation<T>(
  * proxying requests to a custom endpoint if provided.
  */
 export async function* executeStreamWithKeyRotation<T extends GenerateContentResponse>(
-    apiKeys: string[],
+    apiKey: string,
     operation: (ai: GoogleGenAI) => Promise<AsyncGenerator<T>>,
     apiEndpoint?: string,
 ): AsyncGenerator<T> {
-    const keyManager = new KeyManager(apiKeys);
-    if (keyManager.getTotalKeys() === 0) {
-        yield { text: "Error: No API keys provided." } as T;
+    if (!apiKey) {
+        yield { text: "Error: No API key provided." } as T;
         return;
     }
 
@@ -112,28 +100,13 @@ export async function* executeStreamWithKeyRotation<T extends GenerateContentRes
     }
 
     try {
-        let lastError: any = null;
-        let success = false;
-        for (let i = 0; i < keyManager.getTotalKeys(); i++) {
-            const { key } = keyManager.getNextKey();
-            if (!key) continue;
-
-            try {
-                const ai = new GoogleGenAI({ apiKey: key });
-                const stream = await operation(ai);
-                keyManager.saveSuccessIndex();
-                yield* stream;
-                success = true;
-                break; 
-            } catch (error) {
-                lastError = error;
-                console.warn(`API stream failed for key ending in ...${key.slice(-4)}. Trying next key. Error:`, error);
-            }
-        }
-        
-        if (!success) {
-            console.error("All API keys failed for streaming operation.");
-            yield { text: "Error: All API keys failed. " + (lastError?.message || "") } as T;
+        try {
+            const ai = new GoogleGenAI({ apiKey });
+            const stream = await operation(ai);
+            yield* stream;
+        } catch (error) {
+            console.error("API stream failed.", error);
+            yield { text: "Error: API stream failed. " + (error?.message || "") } as T;
         }
 
     } finally {

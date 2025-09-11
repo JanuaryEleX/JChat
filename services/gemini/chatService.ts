@@ -8,7 +8,7 @@ interface Part {
   inlineData?: { mimeType: string; data: string; };
 }
 
-export function sendMessageStream(apiKeys: string[], messages: Message[], newMessage: string, attachments: FileAttachment[], model: string, settings: Settings, toolConfig: any, persona?: Persona | null, isStudyMode?: boolean): AsyncGenerator<GenerateContentResponse> {
+export function sendMessageStream(apiKey: string, baseUrl: string, messages: Message[], newMessage: string, attachments: FileAttachment[], model: string, settings: Settings, toolConfig: any, persona?: Persona | null, isStudyMode?: boolean): AsyncGenerator<GenerateContentResponse> {
   const { formattedHistory, configForApi } = prepareChatPayload(messages, settings, toolConfig, persona, isStudyMode);
   const messageParts: Part[] = attachments.map(att => ({
       inlineData: { mimeType: att.mimeType, data: att.data! }
@@ -26,21 +26,17 @@ export function sendMessageStream(apiKeys: string[], messages: Message[], newMes
   console.log('Payload:', streamPayload);
   console.log('----------------------');
 
-  const useUserApi = settings.enableCustomApiSettings;
-  const apiKeyForRequest = useUserApi ? [settings.customApiKey] : apiKeys;
-  const baseUrlForRequest = useUserApi ? settings.customApiBaseUrl : settings.apiBaseUrl;
-
-  return executeStreamWithKeyRotation(apiKeyForRequest, async (ai) => {
+  return executeStreamWithKeyRotation(apiKey, async (ai) => {
     const chat = ai.chats.create({
       model,
       history: formattedHistory,
       config: configForApi,
     });
     return chat.sendMessageStream({ message: messageParts });
-  }, baseUrlForRequest);
+  }, baseUrl);
 }
 
-export async function generateChatDetails(apiKeys: string[], prompt: string, model: string, settings: Settings): Promise<{ title: string }> {
+export async function generateChatDetails(apiKey: string, baseUrl: string, prompt: string, model: string, settings: Settings): Promise<{ title: string }> {
   try {
     const payload = {
       model: model,
@@ -56,13 +52,9 @@ export async function generateChatDetails(apiKeys: string[], prompt: string, mod
     console.log('Payload:', payload);
     console.log('----------------------');
 
-    const useUserApi = settings.enableCustomApiSettings;
-    const apiKeyForRequest = useUserApi ? [settings.customApiKey] : apiKeys;
-    const baseUrlForRequest = useUserApi ? settings.customApiBaseUrl : settings.apiBaseUrl;
-
-    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKeyForRequest, (ai) =>
+    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKey, (ai) =>
       ai.models.generateContent(payload),
-      baseUrlForRequest
+      baseUrl
     );
 
     const jsonText = response.text.trim();
@@ -77,7 +69,7 @@ export async function generateChatDetails(apiKeys: string[], prompt: string, mod
   }
 }
 
-export async function generateSuggestedReplies(apiKeys: string[], history: Message[], model: string, settings: Settings): Promise<string[]> {
+export async function generateSuggestedReplies(apiKey: string, baseUrl: string, history: Message[], model: string, settings: Settings): Promise<string[]> {
   try {
     const payload = {
       model,
@@ -99,13 +91,9 @@ export async function generateSuggestedReplies(apiKeys: string[], history: Messa
     console.log('Payload:', payload);
     console.log('----------------------');
 
-    const useUserApi = settings.enableCustomApiSettings;
-    const apiKeyForRequest = useUserApi ? [settings.customApiKey] : apiKeys;
-    const baseUrlForRequest = useUserApi ? settings.customApiBaseUrl : settings.apiBaseUrl;
-
-    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKeyForRequest, (ai) =>
+    const response = await executeWithKeyRotation<GenerateContentResponse>(apiKey, (ai) =>
       ai.models.generateContent(payload),
-      baseUrlForRequest
+      baseUrl
     );
 
     const jsonText = response.text.trim();
