@@ -22,9 +22,11 @@ const PasswordGate: React.FC<PasswordGateProps> = ({ onPasswordVerified }) => {
 
     if (password === pass1) {
       localStorage.setItem('kchat-password-verified', 'true');
+      localStorage.setItem('kchat-selected-api-index', '1');
       onPasswordVerified(apiKey1, baseUrl1);
     } else if (password === pass2) {
       localStorage.setItem('kchat-password-verified', 'true');
+      localStorage.setItem('kchat-selected-api-index', '2');
       onPasswordVerified(apiKey2, baseUrl2);
     } else {
       setError('Invalid password');

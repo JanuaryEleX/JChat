@@ -179,11 +179,20 @@ export default function App() {
   useEffect(() => {
     const isVerified = localStorage.getItem('kchat-password-verified');
     if (isVerified) {
-      // 默认使用第一个密码对应的配置
+      // 按照上次选择的通道恢复（默认通道1）
+      const selected = localStorage.getItem('kchat-selected-api-index') || '1';
       const apiKey1 = import.meta.env.VITE_API_KEY_1;
       const baseUrl1 = import.meta.env.VITE_API_BASE_URL_1;
       const apiName1 = import.meta.env.VITE_API_NAME_1;
-      handlePasswordVerified(apiKey1, baseUrl1, apiName1);
+      const apiKey2 = import.meta.env.VITE_API_KEY_2;
+      const baseUrl2 = import.meta.env.VITE_API_BASE_URL_2;
+      const apiName2 = import.meta.env.VITE_API_NAME_2;
+
+      if (selected === '2' && apiKey2 && baseUrl2) {
+        handlePasswordVerified(apiKey2, baseUrl2, apiName2);
+      } else {
+        handlePasswordVerified(apiKey1, baseUrl1, apiName1);
+      }
     }
   }, []);
 

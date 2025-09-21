@@ -184,6 +184,7 @@ export const Sidebar: React.FC<SidebarProps> = (props) => {
             </button>
             <button onClick={() => {
                 localStorage.removeItem('kchat-password-verified');
+                localStorage.removeItem('kchat-selected-api-index');
                 window.location.reload();
             }} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-2xl)] text-[var(--text-color)] hover:bg-black/10 dark:hover:bg-white/10" data-tooltip={t('switchAccount')} data-tooltip-placement="right">
                 <span className="font-semibold">{apiName || t('switchAccount')}</span>
