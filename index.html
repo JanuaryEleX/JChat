@@ -6,6 +6,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>KChat - AI Chat Application</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Minimal compatibility shims (safe for modern browsers) -->
+    <script>
+      (function () {
+        try {
+          // crypto.randomUUID polyfill for older Chrome
+          if (!window.crypto) window.crypto = window.msCrypto || {};
+          if (!window.crypto.randomUUID) {
+            window.crypto.randomUUID = function () {
+              // RFC4122 v4 (not cryptographically strong, but sufficient for IDs)
+              return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0;
+                var v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+              });
+            };
+          }
+
+          // Basic capability check (module-capable but missing critical Web APIs)
+          var missing = [];
+          if (typeof Promise === 'undefined') missing.push('Promise');
+          if (typeof fetch === 'undefined') missing.push('fetch');
+          if (typeof URL === 'undefined') missing.push('URL');
+          if (typeof URLSearchParams === 'undefined') missing.push('URLSearchParams');
+          if (typeof AbortController === 'undefined') missing.push('AbortController');
+
+          if (missing.length) {
+            var el = document.getElementById('root');
+            if (el) {
+              el.style.padding = '16px';
+              el.style.fontFamily = 'system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif';
+              el.innerHTML = '您的浏览器缺少关键特性（' + missing.join(', ') + '），无法正常运行 KChat。请升级浏览器或更换为 Chrome/Edge/Firefox/Safari 新版本。';
+            }
+          }
+        } catch (e) { /* no-op */ }
+      })();
+    </script>
     <link rel="stylesheet" href="/index.css">
     <!-- Rich Content Rendering Libraries -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
@@ -30,6 +66,9 @@
 </head>
   <body class="no-katex-auto-render">
     <div id="root"></div>
+    <!-- Optional polyfills for very old browsers (no-ESM) -->
+    <script nomodule src="https://cdn.jsdelivr.net/npm/whatwg-fetch@3.6.20/dist/fetch.umd.js"></script>
+    <script nomodule src="https://cdn.jsdelivr.net/npm/abortcontroller-polyfill@1.7.8/dist/abortcontroller-polyfill-only.min.js"></script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -29,7 +29,14 @@ const defaultSettings: Settings = {
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<Settings>(defaultSettings);
-  const [availableModels, setAvailableModels] = useState<string[]>(['gemini-1.0-pro', 'gemini-1.5-flash']);
+  const [availableModels, setAvailableModels] = useState<string[]>([
+    'gemini-2.5-pro',
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash',
+    'gemini-1.0-pro',
+  ]);
   const [isStorageLoaded, setIsStorageLoaded] = useState(false);
   const { setLanguage } = useLocalization();
 
@@ -73,7 +80,7 @@ export const useSettings = () => {
   useEffect(() => {
     // [修改点 3] 这里的逻辑不再需要检查 process.env，因为它已经在第一个 effect 中处理过了
     const apiKeys = settings.apiKey || [];
-    if (isStorageLoaded && apiKeys.length > 0) {
+    if (isStorageLoaded) {
       const useUserApi = settings.enableCustomApiSettings;
       const apiKeyForCheck = useUserApi ? [settings.customApiKey] : apiKeys;
       const baseUrlForCheck = useUserApi ? settings.customApiBaseUrl : settings.apiBaseUrl;
