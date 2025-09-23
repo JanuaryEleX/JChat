@@ -1,0 +1,7 @@
+.h-dvh-screen { height: 100vh; }
+@supports (height: 100dvh) { .h-dvh-screen { height: 100dvh; } }
+
+/* Hover fallback for older browsers (no color-mix support) */
+.model-selector-option:hover { background-color: rgba(0,0,0,0.06); }
+
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) { .glass-pane { background: rgba(255,255,255,0.9); } body.dark-mode .glass-pane { background: rgba(28,28,30,0.9); } }
