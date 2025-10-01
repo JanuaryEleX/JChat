@@ -1408,6 +1408,17 @@ body.drawer-open .drawer {
     word-wrap: break-word;
     font-size: 1rem;
 }
+.markdown-content .markdown-table-scroll {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+.markdown-content .markdown-table-scroll > table {
+    min-width: 100%;
+    width: max-content;
+}
 .markdown-content > *:first-child { margin-top: 0; }
 .markdown-content > *:last-child { margin-bottom: 0; }
 .markdown-content p,

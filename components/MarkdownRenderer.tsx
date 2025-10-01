@@ -111,6 +111,21 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, the
       
     currentRef.innerHTML = cleanHtml;
 
+    try {
+      const tables = Array.from(currentRef.querySelectorAll('table'));
+      tables.forEach((table) => {
+        const parent = table.parentElement;
+        if (!parent) return;
+        if (parent.classList.contains('markdown-table-scroll')) return;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'markdown-table-scroll';
+        parent.insertBefore(wrapper, table);
+        wrapper.appendChild(table);
+      });
+    } catch (err) {
+      console.error('Failed to enhance table scrolling:', err);
+    }
+
     if (typeof renderMathInElement !== 'undefined') {
         try {
             renderMathInElement(currentRef, {
